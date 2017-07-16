@@ -33,15 +33,6 @@ $(document).ready(function() {
 // 初始化显示blog文章列表
 function init(){
 
-    $("#bloglist").show();
-    // 隐藏博文内容
-    $("#blogcontent").hide();
-    $("#title").text("");
-    $("#article").html("");
-    if (!$('#blogcontent').is(':hidden')) {
-        $('#blogcontent').hide();
-    }
-
     var titleString = getTitleString();
     //set Blog list    
     $.getJSON(blogListURL, function(json) {
@@ -103,6 +94,17 @@ function init(){
 
 // 返回博文列表
 function backToList(obj){
+    $("#bloglist").show();
+    // 隐藏博文内容
+    $("#blogcontent").hide();
+    $("#title").text("");
+    $("#article").html("");
+    if (!$('#blogcontent').is(':hidden')) {
+        $('#blogcontent').hide();
+    }
+    // 清空博文列表
+    $("#nav").html("");
+    // 重新获取博文列表
     init();
 }
 
