@@ -15,7 +15,7 @@ $(document).ready(function() {
     blogListURL = 'https://api.github.com/repos/' + user + '/' + user + '.github.io/contents/blog';
     issuesList = 'https://api.github.com/repos/' + user + '/' + user + '.github.io/issues';
     issuesHTML = 'https://github.com/' + user + '/' + user + '.github.io/issues'
-    readmeURL = 'https://raw.githubusercontent.com/' + user + '/' + user + '.github.io/master/About Me.md';
+    aboutmeURL = 'https://raw.githubusercontent.com/' + user + '/' + user + '.github.io/master/About Me.md';
 
 
     $("#header").text(user + "'s Blog");
@@ -51,7 +51,7 @@ function init(){
             }
             if (name == titleString) {
                 $("#title").text(name);
-                readmeURL = blogURL;
+                aboutmeURL = blogURL;
             }
 
             new_a.text(name);
@@ -65,29 +65,41 @@ function init(){
             $('#nav').append(new_a);
             $('#nav2').append(new_a.clone());
         }
+        
+    });
+}
 
-        //set readme 
-        $.get(readmeURL, function(result) {
-            var titleString = readmeURL.substr(0,readmeURL.length - 3).split("/")[readmeURL.split("/").length-1];
-            $("#title").html(titleString).show();
-            $("#article").html("");
+// about me
+function aboutme(){
 
-            testEditormdView = editormd.markdownToHTML("article", {
-                markdown: result, //+ "\r\n" + $("#append-test").text(),
-                // htmlDecode: true, // 开启 HTML 标签解析，为了安全性，默认不开启
-                htmlDecode: "style,script,iframe", // you can filter tags decode
-                //toc             : false,
-                tocm: true, // Using [TOCM]
-                //tocContainer    : "#custom-toc-container", // 自定义 ToC 容器层
-                //gfm             : false,
-                //tocDropdown     : true,
-                // markdownSourceCode : true, // 是否保留 Markdown 源码，即是否删除保存源码的 Textarea 标签
-                emoji: true,
-                taskList: true,
-                tex: true, // 默认不解析
-                flowChart: true, // 默认不解析
-                sequenceDiagram: true, // 默认不解析
-            });
+    $("#blogcontent").show();
+    // 隐藏博文列表
+    $("#bloglist").hide();
+    $("#nav").html("");
+    if (!$('#bloglist').is(':hidden')) {
+        $('#bloglist').hide();
+    }
+    //set readme 
+    $.get(aboutmeURL, function(result) {
+        var titleString = aboutmeURL.substr(0,aboutmeURL.length - 3).split("/")[aboutmeURL.split("/").length-1];
+        $("#title").html(titleString).show();
+        $("#article").html("");
+
+        testEditormdView = editormd.markdownToHTML("article", {
+            markdown: result, //+ "\r\n" + $("#append-test").text(),
+            // htmlDecode: true, // 开启 HTML 标签解析，为了安全性，默认不开启
+            htmlDecode: "style,script,iframe", // you can filter tags decode
+            //toc             : false,
+            tocm: true, // Using [TOCM]
+            //tocContainer    : "#custom-toc-container", // 自定义 ToC 容器层
+            //gfm             : false,
+            //tocDropdown     : true,
+            // markdownSourceCode : true, // 是否保留 Markdown 源码，即是否删除保存源码的 Textarea 标签
+            emoji: true,
+            taskList: true,
+            tex: true, // 默认不解析
+            flowChart: true, // 默认不解析
+            sequenceDiagram: true, // 默认不解析
         });
     });
 }
@@ -107,6 +119,7 @@ function backToList(obj){
     // 重新获取博文列表
     init();
 }
+
 
 // 点击文章标题时 显示文章内容
 function setBlogTxt(obj) {
