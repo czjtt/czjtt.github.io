@@ -251,6 +251,60 @@ Markdown 语法：
 内容单元格 第一列第一格 | 内容单元格第二列第一格
 内容单元格 第一列第二格 多加文字 | 内容单元格第二列第二格
 
+对于复杂的表格markdown语法暂时没有支持所以想要复杂点的就只能用html语法了。
+
+```
+<table>
+    <tr>
+        <td colspan = "3"  align="center">Stream操作分类</td>
+    </tr>
+    <tr>
+        <th rowspan = "2"  align="center">中间操作(Intermediate operations) </th>
+        <td align="center">无状态(Stateless) </td>
+        <td align="center">unordered() filter() map() mapToInt() mapToLong() mapToDouble() flatMap() flatMapToInt() flatMapToLong() flatMapToDouble() peek() </td>
+    </tr>
+        <td align="center">有状态(Stateful) </td>
+        <td align="center"> distinct() sorted() sorted() limit() skip() </td>
+    <tr>
+    </tr>
+    <tr>
+        <th rowspan = "2"  align="center">结束操作(Terminal operations)  </th>
+        <td align="center">非短路操作 </td>
+        <td align="center">forEach() forEachOrdered() toArray() reduce() collect() max() min() count() </td>
+    </tr>
+        <td align="center">短路操作(short-circuiting) </td>
+        <td align="center"> anyMatch() allMatch() noneMatch() findFirst() findAny() </td>
+    <tr>
+    </tr>
+</table>
+```
+
+效果如下：
+
+<table>
+    <tr>
+        <td colspan = "3"  align="center">Stream操作分类</td>
+    </tr>
+    <tr>
+        <th rowspan = "2"  align="center">中间操作(Intermediate operations) </th>
+        <td align="center">无状态(Stateless) </td>
+        <td align="center">unordered() filter() map() mapToInt() mapToLong() mapToDouble() flatMap() flatMapToInt() flatMapToLong() flatMapToDouble() peek() </td>
+    </tr>
+        <td align="center">有状态(Stateful) </td>
+        <td align="center"> distinct() sorted() sorted() limit() skip() </td>
+    <tr>
+    </tr>
+    <tr>
+        <th rowspan = "2"  align="center">结束操作(Terminal operations)  </th>
+        <td align="center">非短路操作 </td>
+        <td align="center">forEach() forEachOrdered() toArray() reduce() collect() max() min() count() </td>
+    </tr>
+        <td align="center">短路操作(short-circuiting) </td>
+        <td align="center"> anyMatch() allMatch() noneMatch() findFirst() findAny() </td>
+    <tr>
+    </tr>
+</table>
+
 
 ## 删除线
 
