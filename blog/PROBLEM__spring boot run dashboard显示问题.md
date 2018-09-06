@@ -4,7 +4,12 @@ idea 从2017.2开始对于springboot项目 一个项目存在多个项目的提�
 
 不过有些时候不能显示出来这个面板。
 本人尝试的方法是：
-在项目的.idea/workspace.xml文件中搜索了下dashboard找到<property name="show.run.dashboard.notification" value="false" />
+在项目的.idea/workspace.xml文件中搜索了下dashboard找到
+
+```` <property name="show.run.dashboard.notification" value="false" /> ````
+
+
+
 这样的配置，就试着把false改成了true再重新打开项目就会出现提示：
 
 ![Run Dashboard提示][image2]
