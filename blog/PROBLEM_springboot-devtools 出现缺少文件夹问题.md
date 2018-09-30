@@ -49,11 +49,13 @@ FileSystemWatcher类下
 
 ## 解决方法
 
+
 * 重新打包一份jar
 
 	1.修改springboot-devtools的jar包的源代码
 
 	2.修改出现问题的jar包的源代码中的META-INF文件夹下的MANIFEST.MF文件中的Class-Path里不存在的路径的值
+
 * 按照错误提示，新建几个空文件夹
 
 两种方法当然是第二种简单有效入侵最少了。
