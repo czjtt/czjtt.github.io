@@ -4,3 +4,5 @@
 
 ## 关于我
 >性别男
+github:https://github.com/czjtt
+个人技术分享网站：https://czjtt.github.io/#
