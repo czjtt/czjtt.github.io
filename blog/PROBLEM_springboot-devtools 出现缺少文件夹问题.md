@@ -1,5 +1,5 @@
 ## springboot devtools 热部署 出现的问题
-遇到一个部分jar包出现  
+遇到一个部分jar包出现文件夹缺少的问题。
 
 ````
 “***/lib must exist and must be a directory”
@@ -8,15 +8,14 @@
 “***/bin must exist and must be a directory”
 ````
 
-文件夹缺少的问题。
+
 
 > 本人遇到的是openoffice的jurt和juh两个jar包出现了问题。
 
-这是由于devtools是扫描工程中的所有依赖包，然后读取jar包的META-INF文件夹下的MANIFEST.MF文件中的Class-Path内容，
-过滤掉部分内容
+这是由于devtools是扫描工程中的所有依赖包，然后读取jar包的META-INF文件夹下的MANIFEST.MF文件中的Class-Path内容，过滤掉部分内容。
 以下是代码：
 
-ChangeableUrls类下的
+ChangeableUrls类
 
 
 	private ChangeableUrls(URL... urls) {
@@ -30,10 +29,8 @@ ChangeableUrls类下的
 		}
 		this.urls = Collections.unmodifiableList(reloadableUrls);
 	}
-
-
-然后返回的urls数据，当然会在代码中进行assert
-FileSystemWatcher类下
+返回的urls数据，会在代码中进行assert。
+同样是在dev-tools.jar包中对文件夹进行校验的类FileSystemWatcher（报错信息来源）
 
 	public void addSourceFolder(File folder) {
 		Assert.notNull(folder, "Folder must not be null");
@@ -45,7 +42,7 @@ FileSystemWatcher类下
 		}
 	}
 
-第二行的Assert.isTrue。
+
 
 ## 解决方法
 
