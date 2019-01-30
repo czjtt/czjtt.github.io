@@ -32,7 +32,7 @@ Hello world!1
 Hello world!post_ribbon-consumer
 ```
 
-## 代码跟踪
+## 代码跟踪但是发现Map对象是正常传输过去的
 
 RestTemplate.class
 
@@ -169,50 +169,37 @@ protected void addDefaultHeaders(HttpHeaders headers, T t, MediaType contentType
 	}
 ```
 
-这里主要看最后一部分，对于contentLength的计算，getContentLength(t,headers.getContentType())
 
- AbstractJackson2HttpMessageConverter.getContentLength
-
-```java
-@Override
-	protected Long getContentLength(Object object, MediaType contentType) throws IOException {
-		if (object instanceof MappingJacksonValue) {
-			object = ((MappingJacksonValue) object).getValue();
-		}
-		return super.getContentLength(object, contentType);
-	}
-```
-
-super.getContentLength(object, contentType)方法返回的是一个null。
-
-对于contentLength的解释：
-
-```html
-Content-Length用于描述HTTP消息实体的传输长度the transfer-length of the message-body。在HTTP协议中，消息实体长度和消息实体的传输长度是有区别，比如说gzip压缩下，消息实体长度是压缩前的长度，消息实体 的传输长度是gzip压缩后的长度。
-如果有Transfer-Encoding，则优先采用Transfer-Encoding里面的方法来找到对应的长度。比如说Chunked模式。
-
-简单总结后如下：
-1、Content-Length如果存在并且有效的话，则必须和消息内容的传输长度完全一致。（经过测试，如果过短则会截断，过长则会导致超时。）
-2、如果存在Transfer-Encoding（重点是chunked），则在header中不能有Content-Length，有也会被忽视。
-3、如果采用短连接，则直接可以通过服务器关闭连接来确定消息的传输长度。（这个很容易懂）
-结合HTTP协议其他的特点，比如说Http1.1之前的不支持keep alive。那么可以得出以下结论：
-1、在Http 1.0及之前版本中，content-length字段可有可无。
-2、在http1.1及之后版本。如果是keep alive，则content-length和chunk必然是二选一。若是非keep alive，则和http1.0一样。content-length可有可无。
-```
-
-那就能理解我们传的Map对象为什么接收不到东西了。因为Map对象不能被HttpMessageConverter处理，只能被MappingJackson2HttpMessageConverter对象处理，并且返回的是Content-Length是null，所以即使有内容，也会被截断成空。
 
 ## 解决方案
 
-既然我们熟悉的Map对象不能用来进行传输，那有什么好的方法嘛。那就是网上很多人给的解决方法用MultiValueMap对象来代替。
+### 用Map传输
+
+怎么说呢，代码追踪到request.execute()那一步其实Map对象的参数也是传过去的，但是为什么接收不到呢？
+
+其实原因在接收端，接收的时候是我的接收方式写的不对。接收端应该这样写：
+
+```java
+@RequestMapping(value = "/posthello", method = RequestMethod.POST)
+    public String posthello(
+            @RequestBody Map map,
+            HttpServletRequest request, HttpServletResponse response
+    ){
+        return "Hello world!" + map.get("pa");
+    }
+```
+
+
+
+### 为什么这个MultiValueMap就可以呢？
+
+网上很多人给的解决方法用MultiValueMap对象来代替。
 
 ```java
 MultiValueMap<String, Object> multiValueMap = new LinkedMultiValueMap<String, Object>();
 ```
 
-### 为什么这个MultiValueMap就可以呢？
-
-我们可以回到HttpMessageConverter对象列表中看看。有一个叫AllEncompassingFormHttpMessageConverter的对象。粗略一看是不是跟我们平常理解的post表单提交的表单的意思。
+我们可以回到HttpMessageConverter对象列表中看看。有一个叫AllEncompassingFormHttpMessageConverter的对象。这个对象的继承了FormHttpMessageConverter对象，粗略一看是不是跟我们平常理解的post表单提交的表单的意思。
 
 看看它的messageConverter.canWrite方法。
 
@@ -234,9 +221,107 @@ MultiValueMap<String, Object> multiValueMap = new LinkedMultiValueMap<String, Ob
 	}
 ```
 
-这就是我们为什么要用MultiValueMap对象的理由了。
+同样的在接收端其实也会经过messageConverter的判断，所以通过了FormHttpMessageConverter这个对象的canRead方法，就沿用了read方法，read方法做什么的事情：
 
+```java
+@Override
+	public MultiValueMap<String, String> read(Class<? extends MultiValueMap<String, ?>> clazz,
+			HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
 
+		MediaType contentType = inputMessage.getHeaders().getContentType();
+		Charset charset = (contentType.getCharset() != null ? contentType.getCharset() : this.charset);
+		String body = StreamUtils.copyToString(inputMessage.getBody(), charset);
 
+		String[] pairs = StringUtils.tokenizeToStringArray(body, "&");
+		MultiValueMap<String, String> result = new LinkedMultiValueMap<String, String>(pairs.length);
+		for (String pair : pairs) {
+			int idx = pair.indexOf('=');
+			if (idx == -1) {
+				result.add(URLDecoder.decode(pair, charset.name()), null);
+			}
+			else {
+				String name = URLDecoder.decode(pair.substring(0, idx), charset.name());
+				String value = URLDecoder.decode(pair.substring(idx + 1), charset.name());
+				result.add(name, value);
+			}
+		}
+		return result;
+	}
+```
 
+它相当于重新把参数都设置了一下，成为了name,value格式。所以接收端可以不用和Map对象那样进行接收也可以接收到。
+
+### 使用Pojo对象进行传输
+
+其实和Map对象的传递接收是一样的形式。
+
+Pojo对象：
+
+```java
+public class User implements Serializable {
+
+    private int id;
+    private String name;
+    private int age;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+}
+```
+
+消费者：
+```java
+User user = new User();
+user.setAge(20);
+user.setId(1);
+user.setName("nihao");
+return restTemplate.postForEntity("http://RIBBON-PROVIDER/posthelloUser", user, String.class).getBody();
+```
+
+提供者：
+```java
+@RequestMapping(value = "/posthelloUser", method = RequestMethod.POST)
+    public String posthelloUser(
+            @RequestBody User user,
+            HttpServletRequest request, HttpServletResponse response
+    ){
+        
+        return "Hello world!" + ",user:" + user.toString();
+    }
+```
+
+输出结果：
+```java
+Hello world!,user:User{id=1, name='nihao', age=20}
+```
 
