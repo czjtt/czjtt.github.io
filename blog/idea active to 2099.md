@@ -12,7 +12,7 @@
 
    用记事本打开 分别在最下面一行增加一行：
 
-   ```properties
+   ```html
     -javaagent:D:\soft\development\idea\ideaIU-2017.3.5.win\bin\JetbrainsCrack-2.7-release-str.jar
    ```
 
