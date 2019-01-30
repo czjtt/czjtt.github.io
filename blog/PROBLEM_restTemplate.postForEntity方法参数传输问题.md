@@ -38,7 +38,7 @@ RestTemplate.class
 
 ​	postForEntity  --> execute --> doExecute --> requestCallback.doWithRequest(request) 
 
-到这里这一系列的流程通过名字来理解，request请求回调开始执行。
+代码跟踪流程，doWithRequest通过名字来理解，request请求回调开始执行。
 
 doWithRequest方法的注释：
 
@@ -133,9 +133,9 @@ Gets called by RestTemplate.execute with an opened ClientHttpRequest. Does not n
 5 = {Jaxb2RootElementHttpMessageConverter@8510} 
 6 = {MappingJackson2HttpMessageConverter@8245} 
 
-Map对象的参数 前面6中HttpMessageConverter中的canWrite()方法返回的都是false。即Map对象不符合前面六种messageConverter的要求。只能是默认的MappingJackson2HttpMessageConverter来处理了。还好我们的GenericHttpMessageConverter对象不挑食，canWrite方法返回的是true。
+Map对象的参数 前面6种HttpMessageConverter中的canWrite()方法返回的都是false。即Map对象不符合前面六种messageConverter的要求。只能是默认的MappingJackson2HttpMessageConverter来处理了。还好我们的GenericHttpMessageConverter对象不挑食，canWrite方法返回的是true。
 
-既然能writer那就看看writer方法吧。
+既然能writer那就看看writer方法吧。这里的contentType参数是null, 继续跟着代码流程：
 
 AbstractGenericHttpMessageConverter.wirte() --> AbstractHttpMessageConverter.addDefaultHeaders()
 
@@ -173,7 +173,7 @@ protected void addDefaultHeaders(HttpHeaders headers, T t, MediaType contentType
 
  AbstractJackson2HttpMessageConverter.getContentLength
 
-```
+```java
 @Override
 	protected Long getContentLength(Object object, MediaType contentType) throws IOException {
 		if (object instanceof MappingJacksonValue) {
