@@ -169,13 +169,61 @@ protected void addDefaultHeaders(HttpHeaders headers, T t, MediaType contentType
 	}
 ```
 
+怎么说呢，代码追踪到request.execute()那一步其实Map对象的参数也是传过去的。
 
+接收端来看
+
+RequestMappingHandlerAdapter.invokeHandlerMethod(...) --> ServletInvocableHandlerMethod.invokeAndHandle(...) --> InvocableHandlerMethod.invokeForRequest(...) --> InvocableHandlerMethod.getMethodArgumentValues(...) --> HandlerMethodArgumentResolverComposite.resolveArgument(...)
+
+```java
+@Override
+	public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+			NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+
+		HandlerMethodArgumentResolver resolver = getArgumentResolver(parameter);
+		if (resolver == null) {
+			throw new IllegalArgumentException("Unknown parameter type [" + parameter.getParameterType().getName() + "]");
+		}
+		return resolver.resolveArgument(parameter, mavContainer, webRequest, binderFactory);
+	}
+```
+
+这个方法就到了分叉口。这个resolver对象有很多的实现类，当然是根据getArgumentResolver(parameter)来获取的。
+
+```java
+/**
+	 * Find a registered {@link HandlerMethodArgumentResolver} that supports the given method parameter.
+	 */
+	private HandlerMethodArgumentResolver getArgumentResolver(MethodParameter parameter) {
+		HandlerMethodArgumentResolver result = this.argumentResolverCache.get(parameter);
+		if (result == null) {
+			for (HandlerMethodArgumentResolver methodArgumentResolver : this.argumentResolvers) {
+				if (logger.isTraceEnabled()) {
+					logger.trace("Testing if argument resolver [" + methodArgumentResolver + "] supports [" +
+							parameter.getGenericParameterType() + "]");
+				}
+				if (methodArgumentResolver.supportsParameter(parameter)) {
+					result = methodArgumentResolver;
+					this.argumentResolverCache.put(parameter, result);
+					break;
+				}
+			}
+		}
+		return result;
+	}
+```
+
+当然是根据parameter的类型来判断了，this.argumentResolverCache里面总共有26种HandlerMethodArgumentResolver对象。可以说是HandlerMethodArgumentResolver的所有叶子节点的实现类了。
+
+map对象对应的是RequestResponseBodyMethodProcessor实现类
+
+MultiValueMap对象对应的是RequestParamMethodArgumentResolver实现类(执行resolveArgument()方法的是它的父类AbstractNamedValueMethodArgumentResolver)
 
 ## 解决方案
 
 ### 用Map传输
 
-怎么说呢，代码追踪到request.execute()那一步其实Map对象的参数也是传过去的，但是为什么接收不到呢？
+代码追踪到request.execute()那一步其实Map对象的参数也是传过去的，但是为什么接收不到呢？
 
 其实原因在接收端，接收的时候是我的接收方式写的不对。接收端应该这样写：
 
@@ -193,7 +241,7 @@ protected void addDefaultHeaders(HttpHeaders headers, T t, MediaType contentType
 
 ### 为什么这个MultiValueMap就可以呢？
 
-网上很多人给的解决方法用MultiValueMap对象来代替。
+网上很多人给的解决方法用MultiValueMap对象来代替。MultiValueMap就不用像Map对象那样修改接收端就可以正常接收了。
 
 ```java
 MultiValueMap<String, Object> multiValueMap = new LinkedMultiValueMap<String, Object>();
